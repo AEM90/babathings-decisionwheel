@@ -401,7 +401,7 @@
                 // Add multiple full rotations for roulette effect (5-8 full spins)
                 const minSpins = 5;
                 const maxSpins = 8;
-                const numSpins = minSpins + Math.floor(randomValue * (maxSpins - minSpins + 1));
+                const numSpins = Math.floor(randomValue * (maxSpins - minSpins + 1)) + minSpins;
                 const totalRotation = this.currentRotation + (numSpins * 2 * Math.PI) + targetAngle - this.currentRotation % (2 * Math.PI);
 
                 // Animation settings
