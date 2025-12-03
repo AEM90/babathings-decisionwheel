@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Decision Wheel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .content-wrapper {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .wheel-section {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 40px solid #ff4444;
+            filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+            z-index: 10;
+        }
+
+        .input-section {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 150px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-text {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .result-label {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+
+            .content-wrapper {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎡 Decision Wheel</h1>
+        
+        <div class="content-wrapper">
+            <div class="wheel-section">
+                <div class="wheel-container">
+                    <div class="wheel-pointer"></div>
+                    <canvas id="wheelCanvas"></canvas>
+                </div>
+                <button id="spinBtn">SPIN THE WHEEL</button>
+                <div class="result-section" id="resultSection">
+                    <div class="result-label">The wheel has decided:</div>
+                    <div class="result-text" id="resultText"></div>
+                </div>
+            </div>
+
+            <div class="input-section">
+                <div class="input-group">
+                    <label for="optionsInput">Enter your options:</label>
+                    <textarea 
+                        id="optionsInput" 
+                        placeholder="Enter each option on a new line&#10;&#10;Example:&#10;Pizza&#10;Burger&#10;Sushi&#10;Pasta"
+                    ></textarea>
+                    <div class="help-text">
+                        Enter one option per line. If you provide less than 8 options, they will be automatically replicated to fill 8 slots.
+                    </div>
+                </div>
+                <button id="updateBtn">UPDATE WHEEL</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class DecisionWheel {
+            constructor() {
+                this.canvas = document.getElementById('wheelCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.options = [];
+                this.currentRotation = 0;
+                this.isSpinning = false;
+                this.colors = [
+                    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
+                    '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'
+                ];
+                
+                this.initCanvas();
+                this.setupEventListeners();
+                this.loadDefaultOptions();
+            }
+
+            initCanvas() {
+                // Set canvas size
+                const size = 400;
+                this.canvas.width = size;
+                this.canvas.height = size;
+                this.centerX = size / 2;
+                this.centerY = size / 2;
+                this.radius = size / 2 - 10;
+            }
+
+            setupEventListeners() {
+                document.getElementById('spinBtn').addEventListener('click', () => this.spin());
+                document.getElementById('updateBtn').addEventListener('click', () => this.updateOptions());
+                
+                // Update wheel on input change
+                document.getElementById('optionsInput').addEventListener('input', () => {
+                    this.updateOptions();
+                });
+            }
+
+            loadDefaultOptions() {
+                const defaultOptions = ['Option 1', 'Option 2', 'Option 3', 'Option 4'];
+                document.getElementById('optionsInput').value = defaultOptions.join('\n');
+                this.updateOptions();
+            }
+
+            updateOptions() {
+                const input = document.getElementById('optionsInput').value;
+                const rawOptions = input.split('\n')
+                    .map(opt => opt.trim())
+                    .filter(opt => opt.length > 0);
+
+                if (rawOptions.length === 0) {
+                    this.options = ['Option 1', 'Option 2', 'Option 3', 'Option 4', 
+                                   'Option 5', 'Option 6', 'Option 7', 'Option 8'];
+                } else if (rawOptions.length < 8) {
+                    // Replicate options to fill 8 slots
+                    this.options = [];
+                    while (this.options.length < 8) {
+                        for (let i = 0; i < rawOptions.length && this.options.length < 8; i++) {
+                            this.options.push(rawOptions[i]);
+                        }
+                    }
+                } else {
+                    this.options = rawOptions;
+                }
+
+                this.drawWheel();
+            }
+
+            drawWheel() {
+                const ctx = this.ctx;
+                const numSegments = this.options.length;
+                const anglePerSegment = (2 * Math.PI) / numSegments;
+
+                // Clear canvas
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Save context state
+                ctx.save();
+                ctx.translate(this.centerX, this.centerY);
+                ctx.rotate(this.currentRotation);
+
+                // Draw segments
+                for (let i = 0; i < numSegments; i++) {
+                    const startAngle = i * anglePerSegment;
+                    const endAngle = startAngle + anglePerSegment;
+
+                    // Draw segment
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.arc(0, 0, this.radius, startAngle, endAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = this.colors[i % this.colors.length];
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    // Draw text
+                    ctx.save();
+                    ctx.rotate(startAngle + anglePerSegment / 2);
+                    ctx.textAlign = 'center';
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                    ctx.shadowBlur = 3;
+                    ctx.shadowOffsetX = 1;
+                    ctx.shadowOffsetY = 1;
+                    
+                    const text = this.options[i];
+                    const maxWidth = this.radius - 40;
+                    const textRadius = this.radius * 0.7;
+                    
+                    // Truncate text if too long
+                    let displayText = text;
+                    if (ctx.measureText(text).width > maxWidth) {
+                        while (ctx.measureText(displayText + '...').width > maxWidth && displayText.length > 0) {
+                            displayText = displayText.slice(0, -1);
+                        }
+                        displayText += '...';
+                    }
+                    
+                    ctx.fillText(displayText, textRadius, 5);
+                    ctx.restore();
+                }
+
+                // Draw center circle
+                ctx.beginPath();
+                ctx.arc(0, 0, 30, 0, 2 * Math.PI);
+                ctx.fillStyle = '#fff';
+                ctx.fill();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            spin() {
+                if (this.isSpinning) return;
+                if (this.options.length === 0) return;
+
+                this.isSpinning = true;
+                document.getElementById('spinBtn').disabled = true;
+                document.getElementById('resultSection').classList.remove('show');
+
+                // Generate random result with cryptographic randomness for fairness
+                const crypto = window.crypto || window.msCrypto;
+                const randomBuffer = new Uint32Array(1);
+                crypto.getRandomValues(randomBuffer);
+                const randomValue = randomBuffer[0] / (0xFFFFFFFF + 1);
+                
+                // Calculate target position
+                const selectedIndex = Math.floor(randomValue * this.options.length);
+                const anglePerSegment = (2 * Math.PI) / this.options.length;
+                
+                // The pointer is at the top (12 o'clock), so we need to calculate
+                // the rotation needed to align the selected segment with the pointer
+                const targetAngle = -(selectedIndex * anglePerSegment + anglePerSegment / 2);
+                
+                // Add multiple full rotations for roulette effect (5-8 full spins)
+                const minSpins = 5;
+                const maxSpins = 8;
+                const numSpins = Math.floor(randomValue * (maxSpins - minSpins + 1)) + minSpins;
+                // Ensure numSpins doesn't exceed maxSpins (handles edge case when randomValue = 1.0)
+                const actualSpins = Math.min(numSpins, maxSpins);
+                const normalizedRotation = this.currentRotation % (2 * Math.PI);
+                const totalRotation = this.currentRotation - normalizedRotation + (actualSpins * 2 * Math.PI) + targetAngle;
+
+                // Animation settings
+                const duration = 6000; // 6 seconds for roulette-like feeling
+                const startTime = Date.now();
+                const startRotation = this.currentRotation;
+
+                const animate = () => {
+                    const now = Date.now();
+                    const elapsed = now - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Ease out cubic for natural deceleration
+                    const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+                    this.currentRotation = startRotation + (totalRotation - startRotation) * easeProgress;
+                    this.drawWheel();
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        this.currentRotation = totalRotation;
+                        this.drawWheel();
+                        this.showResult(selectedIndex);
+                        this.isSpinning = false;
+                        document.getElementById('spinBtn').disabled = false;
+                    }
+                };
+
+                animate();
+            }
+
+            showResult(index) {
+                const resultText = document.getElementById('resultText');
+                const resultSection = document.getElementById('resultSection');
+                
+                resultText.textContent = this.options[index];
+                resultSection.classList.add('show');
+            }
+        }
+
+        // Initialize the wheel when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            new DecisionWheel();
+        });
+    </script>
+</body>
+</html>
