@@ -402,7 +402,9 @@
                 const minSpins = 5;
                 const maxSpins = 8;
                 const numSpins = Math.floor(randomValue * (maxSpins - minSpins + 1)) + minSpins;
-                const totalRotation = this.currentRotation + (numSpins * 2 * Math.PI) + targetAngle - this.currentRotation % (2 * Math.PI);
+                // Ensure numSpins doesn't exceed maxSpins
+                const actualSpins = Math.min(numSpins, maxSpins);
+                const totalRotation = this.currentRotation + (actualSpins * 2 * Math.PI) + targetAngle - this.currentRotation % (2 * Math.PI);
 
                 // Animation settings
                 const duration = 6000; // 6 seconds for roulette-like feeling
